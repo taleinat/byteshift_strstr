@@ -1,3 +1,6 @@
+# build directory for benchmarks
+/benchmark/dist
+
 # Object files
 *.o
 *.ko
@@ -27,3 +30,13 @@
 *.i*86
 *.x86_64
 *.hex
+
+# Python byte-code
+*.py[cod]
+__pycache__
+
+# PyCharm
+.idea
+
+# OSX
+**/.DS_Store
