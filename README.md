@@ -1,7 +1,8 @@
 byteshift_strstr
 ================
 
-Simple and fast drop-in replacements for the stdlib's strstr() and memmem() sub-sequence search functions.
+Simple and fast drop-in replacements for the stdlib's strstr() and memmem()
+sub-sequence search functions.
 
 Performance
 ===========
@@ -11,8 +12,9 @@ algorithms when searching for relatively small sub-strings (such as words) or
 when searching through text with a very small alphabet (such as DNA sequences).
 
 If performance is important, benchmarking the relevant function with actual
-data on the intended hardware is highly recommended. This should be easy since
-these functions have the same interface as their common counterparts.
+data on the intended hardware is highly recommended. This should be relatively
+easy since these functions have the same interface as their common
+counterparts.
 
 It is worth noting that the worst case complexity of the algorithm used by
 these functions is `O(n × m)`, where `n` is the length of the string and
@@ -76,20 +78,20 @@ de Bello Gallico* by *Julius Caesar*. Each test was run 100 times and the mean
 time was taken. The tests were run on a late 2012 MacBook Pro 13" Retina, which
 has an *Intel Core i5-3210M* processor.
 
-* `strstr()` is from the *GNU C Library* (version 2.19) and uses the *Two Ways
+* `strstr` is from the *GNU C Library* (version 2.19) and uses the *Two Ways
 Algorithm*
-* `naive strstr()` is a naive brute-force implementation
-* `Volnitsky's strstr()` is
+* `naive strstr` is a naive brute-force implementation
+* `Volnitsky's strstr` is
 [an algorithm by Leonid Volnitsky](http://volnitsky.com/project/str_search/)
-* `fast_strstr()` is
+* `fast_strstr` is
 [a similar lightweight implementation by Raphael Javaux]
 (https://github.com/RaphaelJ/fast_strstr).
-* `byteshift_strstr()` is this implementation.
+* `byteshift_strstr` is this implementation.
 
-Scores were compared to `strstr()`.
+Scores were compared to `strstr`.
 
-Sections of 10, 100, 500, 1000, 5000, 10000, 50000 characters of *Bello Gallico*
-along with the full text (147277 characters) have been used.
+Sections of 10, 100, 500, 1000, 5000, 10000, 50000 characters of *Bello
+Gallico* along with the full text (147277 characters) have been used.
 
 | Algorithm \ Size   | 10                 | 100                | 500                | 1000               |
 | ------------------ |:------------------:|:------------------:|:------------------:|:------------------:|
@@ -106,6 +108,9 @@ along with the full text (147277 characters) have been used.
 | Volnitsky's strstr |  811 us (1.2x)     |  1.6 ms (1.2x)     | 12.6 ms (1.9x)     | 72.6 ms (3.7x)     |
 | fast_strstr        |  559 us (0.8x)     |  1.1 ms (0.8x)     |  5.5 ms (0.8x)     | 16.3 ms (0.8x)     |
 | byteshift_strstr   | **509 us (0.8x)**  | **1.0 ms (0.8x)**  | **5.1 ms (0.8x)**  | **15.0 ms (0.8x)** |
+
+`byteshift_strstr` is faster than all of the alternatives, including the native
+`strstr`, for all but the shortest of search strings.
 
 Note the good performance with short search strings. This is since the
 algorithm doesn't require complex pre-processing the sub-string.
