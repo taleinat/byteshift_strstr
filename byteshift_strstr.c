@@ -28,10 +28,10 @@ char *byteshift_strstr(const char *haystack, const char *needle)
     // Now computes the sum of the first needle_len characters of haystack
     // minus the sum of characters values of needle.
 
-    const char   *i_haystack    = haystack + 1
-             ,   *i_needle      = needle   + 1;
-    bool          identical     = true;
+    const unsigned char *i_haystack = (const unsigned char *)haystack + 1;
+    const unsigned char *i_needle   = (const unsigned char *)needle   + 1;
 
+    bool identical = true;
     while (*i_haystack && *i_needle) {
         identical &= *i_haystack++ == *i_needle++;
     }
@@ -43,33 +43,41 @@ char *byteshift_strstr(const char *haystack, const char *needle)
     else if (identical)
         return (char *) haystack;
 
-    size_t        needle_len    = i_needle - needle;
+    size_t        needle_len    = i_needle - (const unsigned char*)needle;
 
     // Note: needle_len > 1, because we checked that it isn't zero, and if it
     //       is 1 then identical must be true because the first strchr() ensured
     //       that the first characters are identical
 
     const char   *sub_start = haystack;
-    int compare_len;
-    unsigned long first_needle_chars;
-    unsigned long first_haystack_chars;
+    size_t compare_len;
+
+    unsigned long last_needle_chars;
+    unsigned long last_haystack_chars;
     unsigned long mask;
 
+
 #ifdef MAKE_ULONG_BIGENDIAN
-    first_needle_chars = MAKE_ULONG_BIGENDIAN(*(((unsigned long *)needle)));
-    first_haystack_chars = MAKE_ULONG_BIGENDIAN(*(((unsigned long *)haystack)));
+    if (needle_len >= LONG_INT_N_BYTES) {
+        last_needle_chars = MAKE_ULONG_BIGENDIAN(*((unsigned long *)(i_needle - LONG_INT_N_BYTES)));
+        last_haystack_chars = MAKE_ULONG_BIGENDIAN(*((unsigned long *)(i_haystack - LONG_INT_N_BYTES)));
+    }
+    else {
+        last_needle_chars = MAKE_ULONG_BIGENDIAN(*((unsigned long *)(i_needle - needle_len))) >> (LONG_INT_N_BYTES - needle_len);
+        last_haystack_chars = MAKE_ULONG_BIGENDIAN(*((unsigned long *)(i_haystack - needle_len))) >> (LONG_INT_N_BYTES - needle_len);
+    }
 #else
-    const char   *needle_end    = needle + LONG_INT_N_BYTES;
-    size_t        min_cmp_len   = (needle_len < LONG_INT_N_BYTES) ? needle_len : LONG_INT_N_BYTES
-    i_needle -= min_cmp_len;
-    i_haystack -= min_cmp_len;
-    first_needle_chars = 0;
-    first_haystack_chars = 0;
-    while (i_needle != needle_end) {
-        first_needle_chars <<= 8;
-        first_needle_chars ^= *i_needle++;
-        first_haystack_chars <<= 8;
-        first_haystack_chars ^= *i_haystack++;
+    size_t        needle_cmp_len = (needle_len < LONG_INT_N_BYTES) ? needle_len : LONG_INT_N_BYTES;
+    const char   *needle_cmp_end = i_needle;
+    i_needle -= needle_cmp_len;
+    i_haystack -= needle_cmp_len;
+    last_needle_chars = 0;
+    last_haystack_chars = 0;
+    while (i_needle != needle_cmp_end) {
+        last_needle_chars <<= 8;
+        last_needle_chars ^= *i_needle++;
+        last_haystack_chars <<= 8;
+        last_haystack_chars ^= *i_haystack++;
     }
 #endif
 
@@ -89,14 +97,14 @@ char *byteshift_strstr(const char *haystack, const char *needle)
            of the last LONG_INT_N_BYTES, and checking the rest with memcmp() */
         while (*i_haystack)
         {
-            first_haystack_chars <<= 8;
-            first_haystack_chars ^= *(unsigned char *)i_haystack++;
+            last_haystack_chars <<= 8;
+            last_haystack_chars ^= *i_haystack++;
 
             sub_start++;
-            if (   first_haystack_chars == first_needle_chars
+            if (   last_haystack_chars == last_needle_chars
                 && memcmp(sub_start, needle, compare_len) == 0)
             {
-                return (void *) sub_start;
+                return (char *) sub_start;
             }
         }
     }
@@ -107,14 +115,14 @@ char *byteshift_strstr(const char *haystack, const char *needle)
            character, which is the first one */
         while (*i_haystack)
         {
-            first_haystack_chars <<= 8;
-            first_haystack_chars ^= *(unsigned char *)i_haystack++;
+            last_haystack_chars <<= 8;
+            last_haystack_chars ^= *i_haystack++;
 
             sub_start++;
-            if (   first_haystack_chars == first_needle_chars
+            if (   last_haystack_chars == last_needle_chars
                 && *sub_start == needle_first)
             {
-                return (void *) sub_start;
+                return (char *) sub_start;
             }
         }
     }
@@ -125,33 +133,33 @@ char *byteshift_strstr(const char *haystack, const char *needle)
            the entire needle */
         while (*i_haystack)
         {
-            first_haystack_chars <<= 8;
-            first_haystack_chars ^= *(unsigned char *)i_haystack++;
+            last_haystack_chars <<= 8;
+            last_haystack_chars ^= *i_haystack++;
 
-            if (first_haystack_chars == first_needle_chars)
+            if (last_haystack_chars == last_needle_chars)
             {
-                return (void *) (i_haystack - needle_len);
+                return (char *) (i_haystack - needle_len);
             }
         }
     }
     else /* needle_len < LONG_INT_N_BYTES */
     {
         mask = (((unsigned long) 1) << (needle_len * 8)) - 1;
-        first_needle_chars &= mask;
+        last_needle_chars &= mask;
 
         /* iterate through the remainder of haystack, updating the sums' difference
            and checking for identity whenever the difference is zero */
         while (*i_haystack)
         {
-            first_haystack_chars <<= 8;
-            first_haystack_chars ^= *(unsigned char *)i_haystack++;
-            first_haystack_chars &= mask;
+            last_haystack_chars <<= 8;
+            last_haystack_chars ^= *i_haystack++;
+            last_haystack_chars &= mask;
 
             /* if sums_diff == 0, we know that the sums are equal, so it is enough
                to compare all but the last characters */
-            if (first_haystack_chars == first_needle_chars)
+            if (last_haystack_chars == last_needle_chars)
             {
-                return (void *) (i_haystack - needle_len);
+                return (char *) (i_haystack - needle_len);
             }
         }
     }
