@@ -82,7 +82,7 @@ class TestStrStrBase(object):
 
     def test_random_identical(self):
         import random
-        for n_test in range(10):
+        for n_test in range(100):
             length = random.randint(0, 1000)
             needle = bytes([
                 self.get_rand_char()
@@ -91,7 +91,7 @@ class TestStrStrBase(object):
             self.do_test(needle, needle)
 
     def test_random_letters(self):
-        for n_test in range(10):
+        for n_test in range(100):
             haystack = ''.join([
                 random.choice(string.ascii_letters)
                 for _i in range(random.randint(0, 1000))
@@ -107,7 +107,7 @@ class TestStrStrBase(object):
             self.do_test(haystack_with_needle, needle, haystack_with_needle + ' ||| ' + needle)
 
     def test_random(self):
-        for n_test in range(10):
+        for n_test in range(100):
             haystack = bytes([
                 self.get_rand_char()
                 for _i in range(random.randint(0, 1000))
