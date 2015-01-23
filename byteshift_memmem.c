@@ -61,14 +61,14 @@ void *byteshift_memmem(const void *haystack, size_t haystack_len,
             sums_diff += *((unsigned char *) haystack_ptr++);
         }
 #else
+        first_needle_chars = MAKE_ULONG_BIGENDIAN(*(((unsigned long *)needle)));
+        first_haystack_chars = MAKE_ULONG_BIGENDIAN(*(((unsigned long *)haystack)));
+
         needle += needle_len;
         while (needle_ptr != needle) {
             sums_diff -= *((unsigned char *) needle_ptr++);
             sums_diff += *((unsigned char *) haystack_ptr++);
         }
-
-        first_needle_chars = MAKE_ULONG_BIGENDIAN(*(((unsigned long *)needle)));
-        first_haystack_chars = MAKE_ULONG_BIGENDIAN(*(((unsigned long *)haystack)));
 #endif /* MAKE_ULONG_BIGENDIAN */
         needle -= needle_len;
 
