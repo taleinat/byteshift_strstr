@@ -57,18 +57,12 @@ char *byteshift_strstr(const char *haystack, const char *needle)
     unsigned long mask;
 
 
-#ifdef MAKE_ULONG_BIGENDIAN
-    if (needle_len >= LONG_INT_N_BYTES) {
-        last_needle_chars = MAKE_ULONG_BIGENDIAN(*((unsigned long *)(i_needle - LONG_INT_N_BYTES)));
-        last_haystack_chars = MAKE_ULONG_BIGENDIAN(*((unsigned long *)(i_haystack - LONG_INT_N_BYTES)));
-    }
-    else {
-        last_needle_chars = MAKE_ULONG_BIGENDIAN(*((unsigned long *)(i_needle - needle_len))) >> (LONG_INT_N_BYTES - needle_len);
-        last_haystack_chars = MAKE_ULONG_BIGENDIAN(*((unsigned long *)(i_haystack - needle_len))) >> (LONG_INT_N_BYTES - needle_len);
-    }
-#else
     size_t        needle_cmp_len = (needle_len < LONG_INT_N_BYTES) ? needle_len : LONG_INT_N_BYTES;
-    const char   *needle_cmp_end = i_needle;
+#ifdef MAKE_ULONG_BIGENDIAN
+    last_needle_chars = MAKE_ULONG_BIGENDIAN(*((unsigned long *)(i_needle - needle_cmp_len))) >> (8 * (LONG_INT_N_BYTES - needle_cmp_len));
+    last_haystack_chars = MAKE_ULONG_BIGENDIAN(*((unsigned long *)(i_haystack - needle_cmp_len))) >> (8 * (LONG_INT_N_BYTES - needle_cmp_len));
+#else
+    const unsigned char   *needle_cmp_end = i_needle;
     i_needle -= needle_cmp_len;
     i_haystack -= needle_cmp_len;
     last_needle_chars = 0;
@@ -155,8 +149,6 @@ char *byteshift_strstr(const char *haystack, const char *needle)
             last_haystack_chars ^= *i_haystack++;
             last_haystack_chars &= mask;
 
-            /* if sums_diff == 0, we know that the sums are equal, so it is enough
-               to compare all but the last characters */
             if (last_haystack_chars == last_needle_chars)
             {
                 return (char *) (i_haystack - needle_len);
