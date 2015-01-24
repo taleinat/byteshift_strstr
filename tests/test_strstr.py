@@ -1,7 +1,12 @@
 import random
 import string
 import unittest
+import binascii
 from cython_wrappers import py_byteshift_strstr, py_byteshift_memmem
+
+
+def hexlify(bytes_):
+    return binascii.hexlify(bytes_).decode('ascii')
 
 
 class TestStrStrBase(object):
@@ -57,11 +62,14 @@ class TestStrStrBase(object):
     def test_needle_lengths(self):
         for needle_len in range(1, 66):
             needle = b'x' * needle_len
-            self.assertEqual(self.search(b'', needle), -1)
-            self.assertEqual(self.search(needle, needle), 0)
-            self.assertEqual(self.search(b'yyy' + needle, needle), 3)
-            self.assertEqual(self.search(needle + b'zzz', needle), 0)
-            self.assertEqual(self.search(b'yyy' + needle + b'zzz', needle), 3)
+            self.assertEqual(self.search(b'', needle), -1, needle_len)
+            self.assertEqual(self.search(needle, needle), 0, needle_len)
+            self.assertEqual(self.search(b'yyy' + needle, needle), 3,
+                             needle_len)
+            self.assertEqual(self.search(needle + b'zzz', needle), 0,
+                             needle_len)
+            self.assertEqual(self.search(b'yyy' + needle + b'zzz', needle), 3,
+                             needle_len)
 
     def test_big_needle_in_bigger_haystack(self):
         haystack = ''.join([
@@ -88,7 +96,7 @@ class TestStrStrBase(object):
                 self.get_rand_char()
                 for _i in range(length)
             ])
-            self.do_test(needle, needle)
+            self.do_test(needle, needle, hexlify(needle))
 
     def test_random_letters(self):
         for n_test in range(100):
@@ -104,7 +112,8 @@ class TestStrStrBase(object):
 
             idx = random.randint(0, len(haystack))
             haystack_with_needle = haystack[:idx] + needle + haystack[idx:]
-            self.do_test(haystack_with_needle, needle, haystack_with_needle + ' ||| ' + needle)
+            self.do_test(haystack_with_needle, needle,
+                         haystack_with_needle + ' ||| ' + needle)
 
     def test_random(self):
         for n_test in range(100):
@@ -120,7 +129,10 @@ class TestStrStrBase(object):
 
             idx = random.randint(0, len(haystack))
             haystack_with_needle = haystack[:idx] + needle + haystack[idx:]
-            self.do_test(haystack_with_needle, needle)
+            self.do_test(
+                haystack_with_needle, needle,
+                hexlify(haystack_with_needle) + ' ||| ' + hexlify(needle),
+            )
 
 
 class TestByteshiftStrStr(TestStrStrBase, unittest.TestCase):
