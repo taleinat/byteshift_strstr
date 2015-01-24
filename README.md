@@ -8,23 +8,26 @@ Performance
 ===========
 
 `byteshift_strstr()` can be significantly faster than most sub-string search
-algorithms when searching for relatively small sub-strings (such as words) or
-when searching through text with a very small alphabet (such as DNA sequences).
+algorithms in various cases. Scenarios where it is expected to be significantly
+faster than the alternatives when searching for relatively small sub-strings
+(such as words) or when searching through text with a very small alphabet
+(such as DNA sequences).
 
-If performance is important, benchmarking the relevant function with actual
-data on the intended hardware is highly recommended. This should be relatively
-easy since these functions have the same interface as their common
-counterparts.
+The high performance is achieved by doing very little processing for the
+majority of characters, by using a minimal amount of working memory and by
+keeping pre-processing to a minimum.
 
-It is worth noting that the worst case complexity of the algorithm used by
-these functions is `O(n × m)`, where `n` is the length of the string and
-`m` the length of the sub-string. This is the same as the naive brute-force
-algorithm.
+If performance is important, run some benchmarks with your actual data! This
+should be relatively easy since these functions have the same interface as
+their common counterparts.
+
+The worst case complexity of the algorithm used by these functions is
+`O(n × m)`, where `n` is the length of the string and `m` the length of the
+sub-string. This is the same as the naive brute-force algorithm.
 
 However, in most realistic scenarios it will run with linear complexity
 (`O(n)`). `O(n)` is also the best-case complexity of the algorithm, since it
-processes every character of the string being searched. The high performance
-is achieved by doing very little processing for the majority of characters.
+processes every character of the string being searched.
 
 Algorithm and Implementation
 ----------------------------
